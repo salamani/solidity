@@ -65,6 +65,8 @@ wasm::Expression EWasmCodeTransform::generateMultiAssignment(
 	if (_variableNames.size() == 1)
 		return { std::move(assignment) };
 
+	allocateGlobals(_variableNames.size() - 1);
+
 	wasm::Block block;
 	block.statements.emplace_back(move(assignment));
 	for (size_t i = 1; i < _variableNames.size(); ++i)
