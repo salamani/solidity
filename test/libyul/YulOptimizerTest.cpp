@@ -35,6 +35,7 @@
 #include <libyul/optimiser/FullInliner.h>
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
+#include <libyul/optimiser/LoadResolver.h>
 #include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
@@ -42,7 +43,6 @@
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
-#include <libyul/optimiser/SLoadResolver.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/StackCompressor.h>
@@ -243,7 +243,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		SSATransform::run(*m_ast, nameDispenser);
 		RedundantAssignEliminator::run(*m_dialect, *m_ast);
 	}
-	else if (m_optimizerStep == "sloadResolver")
+	else if (m_optimizerStep == "loadResolver")
 	{
 		disambiguate();
 		ForLoopInitRewriter{}(*m_ast);
@@ -252,7 +252,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		CommonSubexpressionEliminator{*m_dialect}(*m_ast);
 		ExpressionSimplifier::run(*m_dialect, *m_ast);
 
-		SLoadResolver{*m_dialect}(*m_ast);
+		LoadResolver::run(*m_dialect, *m_ast);
 
 		UnusedPruner::runUntilStabilised(*m_dialect, *m_ast);
 		ExpressionJoiner::run(*m_ast);
