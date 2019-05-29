@@ -140,7 +140,7 @@ function not(x1, x2, x3, x4) -> r1, r2, r3, r4 {
 	let mask := 0xffffffffffffffff
 	r1, r2, r3, r4 := xor(x1, x2, x3, x4, mask, mask, mask, mask)
 }
-function iszero(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
+function iszero(x1, x2, x3, x4) -> r1, r2, r3, r4 {
 	r4 := i64.eqz(i64.or(i64.or(x1, x2), i64.or(x3, x4)))
 }
 function eq(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {

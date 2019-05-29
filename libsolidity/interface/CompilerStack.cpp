@@ -979,6 +979,8 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	{
 		yul::AssemblyStack evmStack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
 		evmStack.parseAndAnalyze("", compiledContract.yulIROptimized);
+		cout << "Opt evm" << endl;
+		evmStack.optimize();
 
 		cout << yul::AsmPrinter{}(*evmStack.parserResult()->code) << endl;
 
@@ -991,8 +993,11 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 		// TODO this is a hack for now - provide as structured AST!
 		ewasmStack.parseAndAnalyze("", "{}");
 		*ewasmStack.parserResult() = move(ewasmObject);
+		cout << yul::AsmPrinter{}(*ewasmStack.parserResult()->code) << endl;
+		cout << "Opt ewasm" << endl;
 		ewasmStack.optimize();
 		cout << yul::AsmPrinter{}(*ewasmStack.parserResult()->code) << endl;
+		cout << "Assembling" << endl;
 		cout << ewasmStack.assemble(yul::AssemblyStack::Machine::eWasm).assembly << endl;
 	}
 }

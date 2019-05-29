@@ -67,6 +67,7 @@ void OptimiserSuite::run(
 	set<YulString> const& _externallyUsedIdentifiers
 )
 {
+	cout << "Running optimizer - meter " << !!_meter << endl;
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
