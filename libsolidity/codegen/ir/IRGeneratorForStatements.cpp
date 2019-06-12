@@ -1113,6 +1113,9 @@ string IRGeneratorForStatements::binaryOperation(
 			case Token::Div:
 				fun = m_utils.overflowCheckedIntDivFunction(*type);
 				break;
+			case Token::Mod:
+				fun = m_utils.checkedIntModFunction(*type);
+				break;
 			default:
 				break;
 		}
