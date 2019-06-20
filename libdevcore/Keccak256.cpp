@@ -25,6 +25,28 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+// big endian architectures need #define __BYTE_ORDER __BIG_ENDIAN
+#ifndef _MSC_VER
+#include <endian.h>
+#endif
+
+/// restart
+void Keccak::reset()
+{
+  for (size_t i = 0; i < StateSize; i++)
+    m_hash[i] = 0;
+
+  m_numBytes   = 0;
+  m_bufferSize = 0;
+}
+
+/// same as reset()
+Keccak::Keccak(Bits bits)
+: m_blockSize(200 - 2 * (bits / 8)),
+  m_bits(bits)
+{
+  reset();
+}
 
 using namespace std;
 using namespace dev;
@@ -91,7 +113,7 @@ static inline void keccakf(void* state) {
     m_hash[i] ^= LITTLEENDIAN(data64[i]);
 
   // re-compute state
-  for (unsigned int round = 0; round < KeccakRounds; round++)
+  for (unsigned int round = 0; round < 24; round++)
   {
     // Theta
     uint64_t coefficients[5];
@@ -153,8 +175,8 @@ static inline void keccakf(void* state) {
     }
 
     // Iota
-    m_hash[0] ^= XorMasks[round];
-	a[0] ^= XorMasks[round];
+    m_hash[0] ^= RC[round];
+	a[0] ^= RC[round];
   }
 }
 	
