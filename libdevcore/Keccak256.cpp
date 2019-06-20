@@ -57,6 +57,43 @@ namespace dev
 namespace
 {
 
+/// rotate left and wrap around to the right
+  inline uint64_t rotateLeft(uint64_t x, uint8_t numBits)
+  {
+    return (x << numBits) | (x >> (64 - numBits));
+  }
+
+  /// convert litte vs big endian
+  inline uint64_t swap(uint64_t x)
+  {
+#if defined(__GNUC__) || defined(__clang__)
+    return __builtin_bswap64(x);
+#endif
+#ifdef _MSC_VER
+    return _byteswap_uint64(x);
+#endif
+
+    return  (x >> 56) |
+           ((x >> 40) & 0x000000000000FF00ULL) |
+           ((x >> 24) & 0x0000000000FF0000ULL) |
+           ((x >>  8) & 0x00000000FF000000ULL) |
+           ((x <<  8) & 0x000000FF00000000ULL) |
+           ((x << 24) & 0x0000FF0000000000ULL) |
+           ((x << 40) & 0x00FF000000000000ULL) |
+            (x << 56);
+  }
+
+
+  /// return x % 5 for 0 <= x <= 9
+  unsigned int mod5(unsigned int x)
+  {
+    if (x < 5)
+      return x;
+
+    return x - 5;
+  }
+	
+	
 /** libkeccak-tiny
  *
  * A single-file implementation of SHA-3 and SHAKE.
