@@ -79,37 +79,85 @@ static uint64_t const RC[24] = \
 /*** Keccak-f[1600] ***/
 static inline void keccakf(void* state) {
 	uint64_t* a = (uint64_t*)state;
-	uint64_t b[5] = {0};
+	#if defined(__BYTE_ORDER) && (__BYTE_ORDER != 0) && (__BYTE_ORDER == __BIG_ENDIAN)
+#define LITTLEENDIAN(x) swap(x)
+#else
+#define LITTLEENDIAN(x) (x)
+#endif
 
-	for (int i = 0; i < 24; i++)
-	{
-		uint8_t x, y;
-		// Theta
-		FOR5(x, 1,
-			b[x] = 0;
-			FOR5(y, 5,
-				b[x] ^= a[x + y]; ))
-		FOR5(x, 1,
-			FOR5(y, 5,
-				a[y + x] ^= b[(x + 4) % 5] ^ rol(b[(x + 1) % 5], 1); ))
-		// Rho and pi
-		uint64_t t = a[1];
-		x = 0;
-		REPEAT24(b[0] = a[pi[x]];
-				a[pi[x]] = rol(t, rho[x]);
-				t = b[0];
-				x++; )
-		// Chi
-		FOR5(y,
-			5,
-			FOR5(x, 1,
-				b[x] = a[y + x];)
-			FOR5(x, 1,
-				a[y + x] = b[x] ^ ((~b[(x + 1) % 5]) & b[(x + 2) % 5]); ))
-		// Iota
-		a[0] ^= RC[i];
-	}
+  const uint64_t* data64 = (const uint64_t*) data;
+  // mix data into state
+  for (unsigned int i = 0; i < m_blockSize / 8; i++)
+    m_hash[i] ^= LITTLEENDIAN(data64[i]);
+
+  // re-compute state
+  for (unsigned int round = 0; round < KeccakRounds; round++)
+  {
+    // Theta
+    uint64_t coefficients[5];
+    for (unsigned int i = 0; i < 5; i++)
+      coefficients[i] = m_hash[i] ^ m_hash[i + 5] ^ m_hash[i + 10] ^ m_hash[i + 15] ^ m_hash[i + 20];
+
+    for (unsigned int i = 0; i < 5; i++)
+    {
+      uint64_t one = coefficients[mod5(i + 4)] ^ rotateLeft(coefficients[mod5(i + 1)], 1);
+      m_hash[i     ] ^= one;
+      m_hash[i +  5] ^= one;
+      m_hash[i + 10] ^= one;
+      m_hash[i + 15] ^= one;
+      m_hash[i + 20] ^= one;
+    }
+
+    // temporary
+    uint64_t one;
+
+    // Rho Pi
+    uint64_t last = m_hash[1];
+    one = m_hash[10]; m_hash[10] = rotateLeft(last,  1); last = one;
+    one = m_hash[ 7]; m_hash[ 7] = rotateLeft(last,  3); last = one;
+    one = m_hash[11]; m_hash[11] = rotateLeft(last,  6); last = one;
+    one = m_hash[17]; m_hash[17] = rotateLeft(last, 10); last = one;
+    one = m_hash[18]; m_hash[18] = rotateLeft(last, 15); last = one;
+    one = m_hash[ 3]; m_hash[ 3] = rotateLeft(last, 21); last = one;
+    one = m_hash[ 5]; m_hash[ 5] = rotateLeft(last, 28); last = one;
+    one = m_hash[16]; m_hash[16] = rotateLeft(last, 36); last = one;
+    one = m_hash[ 8]; m_hash[ 8] = rotateLeft(last, 45); last = one;
+    one = m_hash[21]; m_hash[21] = rotateLeft(last, 55); last = one;
+    one = m_hash[24]; m_hash[24] = rotateLeft(last,  2); last = one;
+    one = m_hash[ 4]; m_hash[ 4] = rotateLeft(last, 14); last = one;
+    one = m_hash[15]; m_hash[15] = rotateLeft(last, 27); last = one;
+    one = m_hash[23]; m_hash[23] = rotateLeft(last, 41); last = one;
+    one = m_hash[19]; m_hash[19] = rotateLeft(last, 56); last = one;
+    one = m_hash[13]; m_hash[13] = rotateLeft(last,  8); last = one;
+    one = m_hash[12]; m_hash[12] = rotateLeft(last, 25); last = one;
+    one = m_hash[ 2]; m_hash[ 2] = rotateLeft(last, 43); last = one;
+    one = m_hash[20]; m_hash[20] = rotateLeft(last, 62); last = one;
+    one = m_hash[14]; m_hash[14] = rotateLeft(last, 18); last = one;
+    one = m_hash[22]; m_hash[22] = rotateLeft(last, 39); last = one;
+    one = m_hash[ 9]; m_hash[ 9] = rotateLeft(last, 61); last = one;
+    one = m_hash[ 6]; m_hash[ 6] = rotateLeft(last, 20); last = one;
+                      m_hash[ 1] = rotateLeft(last, 44);
+
+    // Chi
+    for (unsigned int j = 0; j < 25; j += 5)
+    {
+      // temporaries
+      uint64_t one = m_hash[j];
+      uint64_t two = m_hash[j + 1];
+
+      m_hash[j]     ^= m_hash[j + 2] & ~two;
+      m_hash[j + 1] ^= m_hash[j + 3] & ~m_hash[j + 2];
+      m_hash[j + 2] ^= m_hash[j + 4] & ~m_hash[j + 3];
+      m_hash[j + 3] ^=      one      & ~m_hash[j + 4];
+      m_hash[j + 4] ^=      two      & ~one;
+    }
+
+    // Iota
+    m_hash[0] ^= XorMasks[round];
+	a[0] ^= XorMasks[round];
+  }
 }
+	
 
 /******** The FIPS202-defined functions. ********/
 
